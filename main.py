@@ -152,15 +152,15 @@ class Game:
 
     def update_combat_status(self, monster):
         self.canvas.clear()
-        self.canvas.display_text(f"Combat contre {monster.name}", 400, 50, font=("Arial", 16), color="red")  # Recentré
+        self.canvas.display_text(f"Combat contre {monster.name}", 400, 50, font=("Arial", 16), color="red")
 
-        self.canvas.display_text("Statistiques du Monstre :", 200, 100, font=("Arial", 14), color="darkred")  # Recentré
+        self.canvas.display_text("Statistiques du Monstre :", 200, 100, font=("Arial", 14), color="darkred")
         self.canvas.display_text(f"Nom : {monster.name}", 200, 130, font=("Arial", 12), color="black")
         self.canvas.display_text(f"HP : {monster.health}", 200, 160, font=("Arial", 12), color="black")
         self.canvas.display_text(f"Attaque : {monster.attack}", 200, 190, font=("Arial", 12), color="black")
         self.canvas.display_text(f"Défense : {monster.defense}", 200, 220, font=("Arial", 12), color="black")
 
-        self.canvas.display_text("Statistiques du Joueur :", 600, 100, font=("Arial", 14), color="blue")  # Recentré
+        self.canvas.display_text("Statistiques du Joueur :", 600, 100, font=("Arial", 14), color="blue")
         self.canvas.display_text(f"Nom : {self.player.name}", 600, 130, font=("Arial", 12), color="black")
         self.canvas.display_text(f"HP : {self.player.health}", 600, 160, font=("Arial", 12), color="black")
         self.canvas.display_text(f"Mana : {self.player.mana}", 600, 190, font=("Arial", 12), color="black")
@@ -180,8 +180,8 @@ class Game:
             else:
                 self.update_combat_status(monster)
 
-        self.canvas.create_button(120, 40, "Attaquer", 340, 300, attack)  # Recentré
-        self.canvas.create_button(120, 40, "Fuir", 340, 350, self.current_zone)  # Recentré
+        self.canvas.create_button(120, 40, "Attaquer", 340, 300, attack)
+        self.canvas.create_button(120, 40, "Fuir", 340, 350, self.current_zone)
         self.canvas.create_button(120, 40, "Inventaire", 340, 400, lambda :self.show_inventory(monster))
         self.canvas.create_button(120, 40, "Sort", 340, 450, lambda: self.show_spells(monster))
 
@@ -322,7 +322,7 @@ class Game:
                 self.current_zone()
             else:
                 self.canvas.clear()
-                self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")  # Recentré
+                self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")
                 self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
 
 
