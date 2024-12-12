@@ -125,7 +125,7 @@ class Game:
     def current_zone(self):
         self.close_aux_windows()
         self.canvas.clear()
-        
+
         zones = {
             "D": "Forêt Enchantée",
             "C": "Grottes Cristallines",
@@ -138,53 +138,53 @@ class Game:
 
         self.draw_map()
         self.create_movement_buttons()
-        
+
         self.canvas.create_button(120, 40, "Menu", 340, 500, self.show_menu)
         self.canvas.create_button(120, 40, "Inventaire", 340, 550, self.show_inventory)
 
     def draw_map(self):
         current_map = self.map_manager.current_map
-        tile_size = 60 
-        start_x = 300 
-        start_y = 150 
-        
+        tile_size = 60
+        start_x = 300
+        start_y = 150
+
         for y in range(current_map.size):
             for x in range(current_map.size):
                 tile = current_map.grid[y][x]
                 tile_x = start_x + (x * tile_size)
                 tile_y = start_y + (y * tile_size)
-                
+
                 color = "lightgray"
                 if tile.visited:
-                    color = "white" 
+                    color = "white"
                 if (x, y) == current_map.current_position:
-                    color = "yellow" 
+                    color = "yellow"
                 if tile.is_exit:
-                    color = "green"  
-                
+                    color = "green"
+
                 self.canvas.canvas.create_rectangle(
                     tile_x, tile_y,
                     tile_x + tile_size, tile_y + tile_size,
                     fill=color, outline="black"
                 )
-                
+
                 if tile.has_monster:
-                    text = "B" if tile.is_exit else "M"  
+                    text = "B" if tile.is_exit else "M"
                     self.canvas.canvas.create_text(
                         tile_x + tile_size/2,
                         tile_y + tile_size/2,
                         text=text,
                         font=("Arial", 14, "bold" if tile.is_exit else "normal")
-    )
+                    )
 
     def create_movement_buttons(self):
         def move_player(direction):
             success, is_exit = self.map_manager.current_map.move(direction)
-            
+
             if success:
                 if is_exit and self.map_manager.has_monster_at_current_position():
                     if self.zone == "S":
-                        monster = Boss_final 
+                        monster = Boss_final
                     else:
                         zones = ["D", "C", "B", "A", "S"]
                         next_zone_index = zones.index(self.zone) + 1
@@ -208,7 +208,7 @@ class Game:
         self.canvas.create_button(80, 40, "↓", 360, 400, lambda: move_player("down"))
         self.canvas.create_button(80, 40, "←", 260, 375, lambda: move_player("left"))
         self.canvas.create_button(80, 40, "→", 460, 375, lambda: move_player("right"))
-    
+
     def start_combat(self, monster):
         self.close_aux_windows()
         self.update_combat_status(monster)
@@ -257,9 +257,9 @@ class Game:
             for i, item in enumerate(loot, start=1):
                 self.player.inventory.append(item)
                 self.canvas.display_text(f"Loot {i}: {item.name}", 400, 130 + i * 30)
-            
+
             self.map_manager.mark_monster_defeated()
-            
+
             current_tile = self.map_manager.current_map.get_current_tile()
             if current_tile.is_exit:
                 self.canvas.display_text("Vous pouvez maintenant passer à la zone suivante !", 400, 250, font=("Arial", 14), color="green")
@@ -271,9 +271,9 @@ class Game:
             else:
                 self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
         else:
-            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 250, 50, font=("Arial", 16), color="red")
-            self.canvas.create_button(120, 40, "Quitter", 190, 200, self.canvas.root.destroy)
-    
+            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 400, 50, font=("Arial", 16), color="red")
+            self.canvas.create_button(120, 40, "Quitter", 360, 525, self.canvas.root.destroy)
+
     def show_inventory(self, monster=None):
         self.close_aux_windows()
 
@@ -353,7 +353,7 @@ class Game:
     def show_spells(self, monster=None):
         self.close_aux_windows()
         if self.player.p_class not in spells:
-            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 250, 480, font=("Arial", 14), color="red")
+            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 350, 480, font=("Arial", 14), color="red")
             return
 
         spells_window = tk.Toplevel(self.canvas.root)
@@ -381,7 +381,7 @@ class Game:
 
             def cast_spell(current_spell=spell):
                 if self.player.mana < current_spell.mana_cost:
-                    self.canvas.display_text("Pas assez de mana !", 250, 480, font=("Arial", 14), color="red")
+                    self.canvas.display_text("Pas assez de mana !", 350, 480, font=("Arial", 14), color="red")
                     spells_window.destroy()
                     return
 
@@ -390,11 +390,16 @@ class Game:
                     monster.health -= current_spell.damage
                 if current_spell.heal > 0:
                     self.player.health += current_spell.heal
-
                 if monster and monster.health <= 0:
                     self.end_combat(victory=True, monster=monster)
                 else:
-                    self.update_combat_status(monster)
+                    if monster:
+                        damage_to_player = max(0, monster.attack - self.player.defense)
+                        self.player.health -= damage_to_player
+                        if self.player.health <= 0:
+                            self.end_combat(victory=False, monster=monster)
+                        else:
+                            self.update_combat_status(monster)
 
             spell_button = tk.Button(
                 spells_window,
@@ -410,15 +415,16 @@ class Game:
         close_button.place(x=120, y=y_position + 20)
 
     def change_zone(self):
-            zones = ["D", "C", "B", "A", "S"]
-            current_index = zones.index(self.zone)
-            if current_index + 1 < len(zones):
-                self.zone = zones[current_index + 1]
-                self.current_zone()
-            else:
-                self.canvas.clear()
-                self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")
-                self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
+        zones = ["D", "C", "B", "A", "S"]
+        current_index = zones.index(self.zone)
+        if current_index + 1 < len(zones):
+            self.zone = zones[current_index + 1]
+            self.current_zone()
+        else:
+            self.canvas.clear()
+            self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")
+            self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
+
     def end_game(self):
         self.canvas.clear()
         self.canvas.display_text(
