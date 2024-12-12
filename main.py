@@ -46,7 +46,6 @@ class Game:
         self.center_window(800, 600)
         self.player = None
         self.zone = "D"
-        self.zone_monsters = {key: ranked_monsters[key][:] for key in ranked_monsters}
         self.aux_windows = []
         self.map_manager = MapManager()
         self.start_menu()
@@ -170,27 +169,37 @@ class Game:
                 )
                 
                 if tile.has_monster:
+                    text = "B" if tile.is_exit else "M"  
                     self.canvas.canvas.create_text(
                         tile_x + tile_size/2,
                         tile_y + tile_size/2,
-                        text="M",
-                        font=("Arial", 14)
-                    )
+                        text=text,
+                        font=("Arial", 14, "bold" if tile.is_exit else "normal")
+    )
 
     def create_movement_buttons(self):
         def move_player(direction):
             success, is_exit = self.map_manager.current_map.move(direction)
             
             if success:
-                if is_exit:
+                if is_exit and self.map_manager.has_monster_at_current_position():
+                    if self.zone == "S":
+                        monster = Boss_final 
+                    else:
+                        zones = ["D", "C", "B", "A", "S"]
+                        next_zone_index = zones.index(self.zone) + 1
+                        next_zone = zones[next_zone_index]
+                        monster = random.choice(ranked_monsters[next_zone])
+                    self.start_combat(monster)
+                elif is_exit and not self.map_manager.has_monster_at_current_position():
                     if self.map_manager.advance_to_next_map():
                         self.zone = self.map_manager.get_current_difficulty()
                         self.current_zone()
                     else:
                         self.end_game()
                 elif self.map_manager.has_monster_at_current_position():
-                    monster = random.choice(self.zone_monsters[self.zone])
-                    self.zone_monsters[self.zone].remove(monster)
+                    monsters_of_current_rank = ranked_monsters[self.zone][:]
+                    monster = random.choice(monsters_of_current_rank)
                     self.start_combat(monster)
                 else:
                     self.current_zone()
@@ -199,6 +208,7 @@ class Game:
         self.canvas.create_button(80, 40, "↓", 360, 400, lambda: move_player("down"))
         self.canvas.create_button(80, 40, "←", 260, 375, lambda: move_player("left"))
         self.canvas.create_button(80, 40, "→", 460, 375, lambda: move_player("right"))
+    
     def start_combat(self, monster):
         self.close_aux_windows()
         self.update_combat_status(monster)
@@ -250,11 +260,20 @@ class Game:
             
             self.map_manager.mark_monster_defeated()
             
-            self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
+            current_tile = self.map_manager.current_map.get_current_tile()
+            if current_tile.is_exit:
+                self.canvas.display_text("Vous pouvez maintenant passer à la zone suivante !", 400, 250, font=("Arial", 14), color="green")
+                if self.map_manager.advance_to_next_map():
+                    self.zone = self.map_manager.get_current_difficulty()
+                    self.canvas.create_button(120, 40, "Zone suivante", 340, 520, self.current_zone)
+                else:
+                    self.canvas.create_button(120, 40, "Terminer", 340, 520, self.end_game)
+            else:
+                self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
         else:
             self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 250, 50, font=("Arial", 16), color="red")
             self.canvas.create_button(120, 40, "Quitter", 190, 200, self.canvas.root.destroy)
-
+    
     def show_inventory(self, monster=None):
         self.close_aux_windows()
         def refresh_inventory():
