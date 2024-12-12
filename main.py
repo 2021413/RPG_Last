@@ -257,27 +257,46 @@ class Game:
 
     def show_inventory(self, monster=None):
         self.close_aux_windows()
+
         def refresh_inventory():
+            # On détruit les anciens boutons
             for button in item_buttons.values():
                 button.destroy()
             item_buttons.clear()
 
             y_position = 60
             for item in self.player.inventory:
+                # Construction de la description de l'objet
                 if isinstance(item.type, tuple):
+                    # Si l'objet a plusieurs types et valeurs
                     item_types = [f"{['Attaque', 'Défense', 'Soin', 'Mana'][t]} +{v}" for t, v in zip(item.type, item.value)]
                     item_description = f"{item.name} ({', '.join(item_types)})"
                 else:
-                    item_type = ["Attaque", "Défense", "Soin", "Mana"][item.type]
-                    item_description = f"{item.name} ({item_type} +{item.value})"
+                    # Objet simple (un seul type)
+                    item_type_name = ["Attaque", "Défense", "Soin", "Mana"][item.type]
+                    item_description = f"{item.name} ({item_type_name} +{item.value})"
+
+                # Indication si l'objet est équipé
+                if item == self.player.equipment.get(0):
+                    item_description += " (Équipé comme arme)"
+                elif item == self.player.equipment.get(1):
+                    item_description += " (Équipé comme armure)"
 
                 def use_item(item=item):
-                    self.player.add_item(item)
-                    self.player.inventory.remove(item)
+                    # Selon le type, on équipe ou on consomme
+                    if item.type in (0, 1):
+                        # Équiper l'objet (arme ou armure)
+                        self.player.equip_item(item)
+                    else:
+                        # Consommer l'objet (potion de soin ou de mana)
+                        self.player.apply_item_bonus(item)
+                        self.player.inventory.remove(item)
+
                     refresh_inventory()
                     if monster:
                         self.update_combat_status(monster)
 
+                # Création du bouton pour utiliser l'objet
                 item_button = tk.Button(
                     inventory_window,
                     text=item_description,
@@ -293,6 +312,7 @@ class Game:
             inventory_canvas.config(height=inventory_height)
             inventory_window.geometry(f"400x{inventory_height}")
 
+        # Création de la fenêtre d'inventaire
         inventory_window = tk.Toplevel(self.canvas.root)
         inventory_window.title("Inventaire")
 
