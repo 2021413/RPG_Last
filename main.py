@@ -152,20 +152,20 @@ class Game:
 
     def update_combat_status(self, monster):
         self.canvas.clear()
-        self.canvas.display_text(f"Combat contre {monster.name}", 400, 50, font=("Arial", 16), color="red")
+        self.canvas.display_text(f"Combat contre {monster.name}", 200, 25, font=("Arial", 16), color="red")
 
-        self.canvas.display_text("Statistiques du Monstre :", 200, 100, font=("Arial", 14), color="darkred")
-        self.canvas.display_text(f"Nom : {monster.name}", 200, 130, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"HP : {monster.health}", 200, 160, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"Attaque : {monster.attack}", 200, 190, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"Défense : {monster.defense}", 200, 220, font=("Arial", 12), color="black")
+        self.canvas.display_text("Statistiques du Monstre :", 675, 50, font=("Arial", 14), color="darkred")
+        self.canvas.display_text(f"Nom : {monster.name}", 675, 80, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"HP : {monster.health}", 675, 110, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"Attaque : {monster.attack}", 675, 140, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"Défense : {monster.defense}", 675, 170, font=("Arial", 12), color="black")
 
-        self.canvas.display_text("Statistiques du Joueur :", 600, 100, font=("Arial", 14), color="blue")
-        self.canvas.display_text(f"Nom : {self.player.name}", 600, 130, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"HP : {self.player.health}", 600, 160, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"Mana : {self.player.mana}", 600, 190, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"Attaque : {self.player.attack}", 600, 220, font=("Arial", 12), color="black")
-        self.canvas.display_text(f"Défense : {self.player.defense}", 600, 250, font=("Arial", 12), color="black")
+        self.canvas.display_text("Statistiques du Joueur :", 125, 300, font=("Arial", 14), color="blue")
+        self.canvas.display_text(f"Nom : {self.player.name}", 125, 330, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"HP : {self.player.health}", 125, 360, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"Mana : {self.player.mana}", 125, 390, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"Attaque : {self.player.attack}", 125, 420, font=("Arial", 12), color="black")
+        self.canvas.display_text(f"Défense : {self.player.defense}", 125, 450, font=("Arial", 12), color="black")
 
         def attack():
             damage_to_monster = max(0, self.player.attack - monster.defense)
@@ -180,10 +180,10 @@ class Game:
             else:
                 self.update_combat_status(monster)
 
-        self.canvas.create_button(120, 40, "Attaquer", 340, 300, attack)
-        self.canvas.create_button(120, 40, "Fuir", 340, 350, self.current_zone)
-        self.canvas.create_button(120, 40, "Inventaire", 340, 400, lambda :self.show_inventory(monster))
-        self.canvas.create_button(120, 40, "Sort", 340, 450, lambda: self.show_spells(monster))
+        self.canvas.create_button(120, 40, "Attaquer", 75, 525, attack)
+        self.canvas.create_button(120, 40, "Sort", 250, 525, lambda: self.show_spells(monster))
+        self.canvas.create_button(120, 40, "Inventaire", 425, 525, lambda :self.show_inventory(monster))
+        self.canvas.create_button(120, 40, "Fuir", 600, 525, self.current_zone)
 
     def end_combat(self, victory, monster):
         self.close_aux_windows()
