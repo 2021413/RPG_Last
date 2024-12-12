@@ -6,6 +6,8 @@ class Monster:
         self.defense = defense
         self.rank = rank
 
+Boss_final = Monster("ROI Démon Imortel", 2000, 200, 150, "S+")
+
 ranked_monsters = {
     "S": [  # Rang S - Monstres très puissants
         Monster("Dragon Ancien", 1000, 140, 100, "S"),
