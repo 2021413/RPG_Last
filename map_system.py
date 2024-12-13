@@ -3,14 +3,6 @@ from typing import List, Tuple, Optional
 
 class MapTile:
     def __init__(self, x: int, y: int, is_exit: bool = False):
-        """
-        Initialise une case de la map
-        
-        Args:
-            x (int): Position x de la case
-            y (int): Position y de la case
-            is_exit (bool): True si c'est une sortie, False sinon
-        """
         self.x = x
         self.y = y
         self.is_exit = is_exit
@@ -19,32 +11,40 @@ class MapTile:
 
 class GameMap:
     def __init__(self, difficulty: str):
-        """
-        Initialise une map pour une zone de difficulté donnée
-        
-        Args:
-            difficulty (str): Niveau de difficulté ('D', 'C', 'B', 'A', 'S')
-        """
         self.difficulty = difficulty
-        self.size = 3 
-        self.current_position = (1, 1)
+        self.size = self._get_map_size(difficulty)
+        self.current_position = (self.size // 2, self.size // 2)  
         self.grid = self.create_map()
 
+    def _get_map_size(self, difficulty: str) -> int:
+        sizes = {
+            "D": 3, 
+            "C": 4,  
+            "B": 5,  
+            "A": 5,  
+            "S": 5  
+        }
+        return sizes.get(difficulty, 3)
+
     def create_map(self) -> List[List[MapTile]]:
-        """Crée une nouvelle map 3x3 avec une sortie aléatoire sur un bord"""
         grid = [[MapTile(x, y) for x in range(self.size)] for y in range(self.size)]
         
-        exit_positions = [
-            (0, 1),
-            (1, 0),
-            (1, 2), 
-            (2, 1)   
-        ]
+        exit_positions = []
+        for i in range(self.size):
+            if i not in [0, self.size-1]: 
+                exit_positions.extend([
+                    (0, i),     
+                    (i, 0),     
+                    (i, self.size-1),
+                    (self.size-1, i) 
+                ])
+        
         exit_x, exit_y = random.choice(exit_positions)
         grid[exit_y][exit_x].is_exit = True
         
-        grid[1][1].visited = True
-        grid[1][1].has_monster = False
+        center = self.size // 2
+        grid[center][center].visited = True
+        grid[center][center].has_monster = False
         
         return grid
 
@@ -75,15 +75,6 @@ class GameMap:
         return False
 
     def move(self, direction: str) -> Tuple[bool, bool]:
-        """
-        Déplace le joueur dans la direction donnée
-        
-        Args:
-            direction (str): Direction du mouvement ('up', 'down', 'left', 'right')
-        
-        Returns:
-            Tuple[bool, bool]: (mouvement_réussi, case_est_sortie)
-        """
         if not self.can_move(direction):
             return False, False
 

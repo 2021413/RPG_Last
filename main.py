@@ -85,6 +85,8 @@ class Game:
             else:
                 self.canvas.display_text("Veuillez entrer un nom valide.", 400, 250, font=("Arial", 12), color="red")
 
+        name_entry.bind('<Return>', lambda event: submit_name())
+
         self.canvas.create_button(100, 40, "Valider", 350, 300, submit_name)
 
     def choose_class(self, name):
@@ -93,10 +95,10 @@ class Game:
 
         def set_class(class_name):
             classes = {
-                "Guerrier": Player(name, "Guerrier", 180, 40, 20, 20),
+                "Guerrier": Player(name, "Guerrier", 150, 50, 25, 20),
                 "Mage": Player(name, "Mage", 50000, 5000, 50000, 5000),
-                "Assassin": Player(name, "Assassin", 140, 80, 35, 0),
-                "Paladin": Player(name, "Paladin", 160, 60, 25, 25),
+                "Assassin": Player(name, "Assassin", 120, 70, 40, 8),
+                "Paladin": Player(name, "Paladin", 140, 100, 20, 15),
             }
             self.player = classes[class_name]
             self.show_menu()
@@ -109,7 +111,7 @@ class Game:
     def show_menu(self):
         self.close_aux_windows()
         self.canvas.clear()
-        self.canvas.display_text(f"Menu : {self.player.name}, {self.player.p_class}", 400, 100, font=("Arial", 16), color="blue")  # Recentré
+        self.canvas.display_text(f"Menu : {self.player.name}, {self.player.p_class}", 400, 100, font=("Arial", 16), color="blue") 
         stats = [
             f"HP: {self.player.health}",
             f"Mana: {self.player.mana}",
@@ -139,14 +141,19 @@ class Game:
         self.draw_map()
         self.create_movement_buttons()
         
-        self.canvas.create_button(120, 40, "Menu", 340, 500, self.show_menu)
-        self.canvas.create_button(120, 40, "Inventaire", 340, 550, self.show_inventory)
+        self.canvas.create_button(120, 40, "Menu", 250, 530, self.show_menu)
+        self.canvas.create_button(120, 40, "Inventaire", 450, 530, self.show_inventory)
 
     def draw_map(self):
         current_map = self.map_manager.current_map
-        tile_size = 60 
-        start_x = 300 
-        start_y = 150 
+        max_map_size = 5 
+        
+        canvas_size = 300 
+        tile_size = canvas_size // max_map_size
+        
+        margin = (max_map_size - current_map.size) * tile_size // 2
+        start_x = 250 + margin
+        start_y = 70 + margin
         
         for y in range(current_map.size):
             for x in range(current_map.size):
@@ -156,11 +163,11 @@ class Game:
                 
                 color = "lightgray"
                 if tile.visited:
-                    color = "white" 
+                    color = "white"
                 if (x, y) == current_map.current_position:
-                    color = "yellow" 
+                    color = "yellow"
                 if tile.is_exit:
-                    color = "green"  
+                    color = "green"
                 
                 self.canvas.canvas.create_rectangle(
                     tile_x, tile_y,
@@ -169,13 +176,14 @@ class Game:
                 )
                 
                 if tile.has_monster:
-                    text = "B" if tile.is_exit else "M"  
+                    text = "BOSS" if tile.is_exit else "M"
+                    font_size = 10 if tile.is_exit else 12
                     self.canvas.canvas.create_text(
                         tile_x + tile_size/2,
                         tile_y + tile_size/2,
                         text=text,
-                        font=("Arial", 14, "bold" if tile.is_exit else "normal")
-    )
+                        font=("Arial", font_size, "bold" if tile.is_exit else "normal")
+                    )
 
     def create_movement_buttons(self):
         def move_player(direction):
@@ -184,12 +192,17 @@ class Game:
             if success:
                 if is_exit and self.map_manager.has_monster_at_current_position():
                     if self.zone == "S":
-                        monster = Boss_final 
+                        monster = Monster(Boss_final.name, Boss_final.health, 
+                                    Boss_final.attack, Boss_final.defense, 
+                                    Boss_final.rank)
                     else:
                         zones = ["D", "C", "B", "A", "S"]
                         next_zone_index = zones.index(self.zone) + 1
                         next_zone = zones[next_zone_index]
-                        monster = random.choice(ranked_monsters[next_zone])
+                        template_monster = random.choice(ranked_monsters[next_zone])
+                        monster = Monster(template_monster.name, template_monster.health, 
+                                    template_monster.attack, template_monster.defense, 
+                                    template_monster.rank)
                     self.start_combat(monster)
                 elif is_exit and not self.map_manager.has_monster_at_current_position():
                     if self.map_manager.advance_to_next_map():
@@ -198,16 +211,18 @@ class Game:
                     else:
                         self.end_game()
                 elif self.map_manager.has_monster_at_current_position():
-                    monsters_of_current_rank = ranked_monsters[self.zone][:]
-                    monster = random.choice(monsters_of_current_rank)
+                    template_monster = random.choice(ranked_monsters[self.zone])
+                    monster = Monster(template_monster.name, template_monster.health, 
+                                template_monster.attack, template_monster.defense, 
+                                template_monster.rank)
                     self.start_combat(monster)
                 else:
                     self.current_zone()
 
-        self.canvas.create_button(80, 40, "↑", 360, 350, lambda: move_player("up"))
-        self.canvas.create_button(80, 40, "↓", 360, 400, lambda: move_player("down"))
-        self.canvas.create_button(80, 40, "←", 260, 375, lambda: move_player("left"))
-        self.canvas.create_button(80, 40, "→", 460, 375, lambda: move_player("right"))
+        self.canvas.create_button(80, 40, "↑", 360, 450, lambda: move_player("up"))
+        self.canvas.create_button(80, 40, "↓", 360, 500, lambda: move_player("down"))
+        self.canvas.create_button(80, 40, "←", 260, 475, lambda: move_player("left"))
+        self.canvas.create_button(80, 40, "→", 460, 475, lambda: move_player("right"))
     
     def start_combat(self, monster):
         self.close_aux_windows()
@@ -253,6 +268,7 @@ class Game:
         self.canvas.clear()
         if victory:
             self.canvas.display_text(f"Vous avez vaincu {monster.name} !", 400, 100, font=("Arial", 16), color="green")
+            self.player.mana = min(self.player.max_mana, self.player.mana + 10)
             loot = random.sample(ranked_items[monster.rank], 2)
             for i, item in enumerate(loot, start=1):
                 self.player.inventory.append(item)
@@ -366,14 +382,24 @@ class Game:
                     return
 
                 self.player.mana -= current_spell.mana_cost
+                
                 if current_spell.damage > 0 and monster:
                     monster.health -= current_spell.damage
                 if current_spell.heal > 0:
                     self.player.health += current_spell.heal
 
+                if monster:
+                    damage_to_player = max(0, monster.attack - self.player.defense)
+                    self.player.health -= damage_to_player
+
                 if monster and monster.health <= 0:
+                    spells_window.destroy()
                     self.end_combat(victory=True, monster=monster)
+                elif self.player.health <= 0:
+                    spells_window.destroy()
+                    self.end_combat(victory=False, monster=monster)
                 else:
+                    spells_window.destroy()
                     self.update_combat_status(monster)
 
             spell_button = tk.Button(
