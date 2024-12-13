@@ -127,7 +127,7 @@ class Game:
     def current_zone(self):
         self.close_aux_windows()
         self.canvas.clear()
-        
+
         zones = {
             "D": "Forêt Enchantée",
             "C": "Grottes Cristallines",
@@ -155,12 +155,13 @@ class Game:
         start_x = 250 + margin
         start_y = 70 + margin
         
+
         for y in range(current_map.size):
             for x in range(current_map.size):
                 tile = current_map.grid[y][x]
                 tile_x = start_x + (x * tile_size)
                 tile_y = start_y + (y * tile_size)
-                
+
                 color = "lightgray"
                 if tile.visited:
                     color = "white"
@@ -168,33 +169,36 @@ class Game:
                     color = "yellow"
                 if tile.is_exit:
                     color = "green"
-                
+
                 self.canvas.canvas.create_rectangle(
                     tile_x, tile_y,
                     tile_x + tile_size, tile_y + tile_size,
                     fill=color, outline="black"
                 )
-                
+
                 if tile.has_monster:
                     text = "BOSS" if tile.is_exit else "M"
                     font_size = 10 if tile.is_exit else 12
+
                     self.canvas.canvas.create_text(
                         tile_x + tile_size/2,
                         tile_y + tile_size/2,
                         text=text,
                         font=("Arial", font_size, "bold" if tile.is_exit else "normal")
+
                     )
 
     def create_movement_buttons(self):
         def move_player(direction):
             success, is_exit = self.map_manager.current_map.move(direction)
-            
+
             if success:
                 if is_exit and self.map_manager.has_monster_at_current_position():
                     if self.zone == "S":
                         monster = Monster(Boss_final.name, Boss_final.health, 
                                     Boss_final.attack, Boss_final.defense, 
                                     Boss_final.rank)
+
                     else:
                         zones = ["D", "C", "B", "A", "S"]
                         next_zone_index = zones.index(self.zone) + 1
@@ -224,6 +228,7 @@ class Game:
         self.canvas.create_button(80, 40, "←", 260, 475, lambda: move_player("left"))
         self.canvas.create_button(80, 40, "→", 460, 475, lambda: move_player("right"))
     
+
     def start_combat(self, monster):
         self.close_aux_windows()
         self.update_combat_status(monster)
@@ -273,9 +278,9 @@ class Game:
             for i, item in enumerate(loot, start=1):
                 self.player.inventory.append(item)
                 self.canvas.display_text(f"Loot {i}: {item.name}", 400, 130 + i * 30)
-            
+
             self.map_manager.mark_monster_defeated()
-            
+
             current_tile = self.map_manager.current_map.get_current_tile()
             if current_tile.is_exit:
                 self.canvas.display_text("Vous pouvez maintenant passer à la zone suivante !", 400, 250, font=("Arial", 14), color="green")
@@ -287,11 +292,12 @@ class Game:
             else:
                 self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
         else:
-            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 250, 50, font=("Arial", 16), color="red")
-            self.canvas.create_button(120, 40, "Quitter", 190, 200, self.canvas.root.destroy)
-    
+            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 400, 50, font=("Arial", 16), color="red")
+            self.canvas.create_button(120, 40, "Quitter", 360, 525, self.canvas.root.destroy)
+
     def show_inventory(self, monster=None):
         self.close_aux_windows()
+
         def refresh_inventory():
             for button in item_buttons.values():
                 button.destroy()
@@ -303,12 +309,21 @@ class Game:
                     item_types = [f"{['Attaque', 'Défense', 'Soin', 'Mana'][t]} +{v}" for t, v in zip(item.type, item.value)]
                     item_description = f"{item.name} ({', '.join(item_types)})"
                 else:
-                    item_type = ["Attaque", "Défense", "Soin", "Mana"][item.type]
-                    item_description = f"{item.name} ({item_type} +{item.value})"
+                    item_type_name = ["Attaque", "Défense", "Soin", "Mana"][item.type]
+                    item_description = f"{item.name} ({item_type_name} +{item.value})"
+
+                if item == self.player.equipment.get(0):
+                    item_description += " (Équipé comme arme)"
+                elif item == self.player.equipment.get(1):
+                    item_description += " (Équipé comme armure)"
 
                 def use_item(item=item):
-                    self.player.add_item(item)
-                    self.player.inventory.remove(item)
+                    if item.type in (0, 1):
+                        self.player.equip_item(item)
+                    else:
+                        self.player.apply_item_bonus(item)
+                        self.player.inventory.remove(item)
+
                     refresh_inventory()
                     if monster:
                         self.update_combat_status(monster)
@@ -349,7 +364,7 @@ class Game:
     def show_spells(self, monster=None):
         self.close_aux_windows()
         if self.player.p_class not in spells:
-            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 250, 480, font=("Arial", 14), color="red")
+            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 350, 480, font=("Arial", 14), color="red")
             return
 
         spells_window = tk.Toplevel(self.canvas.root)
@@ -377,7 +392,7 @@ class Game:
 
             def cast_spell(current_spell=spell):
                 if self.player.mana < current_spell.mana_cost:
-                    self.canvas.display_text("Pas assez de mana !", 250, 480, font=("Arial", 14), color="red")
+                    self.canvas.display_text("Pas assez de mana !", 350, 480, font=("Arial", 14), color="red")
                     spells_window.destroy()
                     return
 
@@ -387,10 +402,10 @@ class Game:
                     monster.health -= current_spell.damage
                 if current_spell.heal > 0:
                     self.player.health += current_spell.heal
-
                 if monster:
                     damage_to_player = max(0, monster.attack - self.player.defense)
                     self.player.health -= damage_to_player
+
 
                 if monster and monster.health <= 0:
                     spells_window.destroy()
@@ -401,6 +416,7 @@ class Game:
                 else:
                     spells_window.destroy()
                     self.update_combat_status(monster)
+
 
             spell_button = tk.Button(
                 spells_window,
@@ -416,15 +432,16 @@ class Game:
         close_button.place(x=120, y=y_position + 20)
 
     def change_zone(self):
-            zones = ["D", "C", "B", "A", "S"]
-            current_index = zones.index(self.zone)
-            if current_index + 1 < len(zones):
-                self.zone = zones[current_index + 1]
-                self.current_zone()
-            else:
-                self.canvas.clear()
-                self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")
-                self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
+        zones = ["D", "C", "B", "A", "S"]
+        current_index = zones.index(self.zone)
+        if current_index + 1 < len(zones):
+            self.zone = zones[current_index + 1]
+            self.current_zone()
+        else:
+            self.canvas.clear()
+            self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial", 16), color="gold")
+            self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
+
     def end_game(self):
         self.canvas.clear()
         self.canvas.display_text(
