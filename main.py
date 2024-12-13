@@ -312,13 +312,17 @@ class Game:
                     item_type_name = ["Attaque", "Défense", "Soin", "Mana"][item.type]
                     item_description = f"{item.name} ({item_type_name} +{item.value})"
 
-                if item == self.player.equipment.get(0):
-                    item_description += " (Équipé comme arme)"
-                elif item == self.player.equipment.get(1):
-                    item_description += " (Équipé comme armure)"
+                if item in self.player.equipment.values():
+                    item_description += " (Équipé)"
+
+                item_frame = tk.Frame(inventory_window)
+                item_frame.place(x=25, y=y_position)
 
                 def use_item(item=item):
-                    if item.type in (0, 1):
+                    if item.type in (0, 1): 
+                        old_equipment = self.player.equipment.get(item.type)
+                        if old_equipment:
+                            self.player.inventory.remove(old_equipment) 
                         self.player.equip_item(item)
                     else:
                         self.player.apply_item_bonus(item)
@@ -328,15 +332,35 @@ class Game:
                     if monster:
                         self.update_combat_status(monster)
 
-                item_button = tk.Button(
-                    inventory_window,
+                def delete_item(item=item):
+                    if item in self.player.equipment.values():
+                        self.player.unequip_item(item.type)
+                    self.player.inventory.remove(item)
+                    refresh_inventory()
+                    if monster:
+                        self.update_combat_status(monster)
+
+                use_button = tk.Button(
+                    item_frame,
                     text=item_description,
                     command=use_item,
-                    width=40,
+                    width=30,
                     height=1,
                 )
-                item_button.place(x=25, y=y_position)
-                item_buttons[y_position] = item_button
+                use_button.pack(side=tk.LEFT)
+
+                delete_button = tk.Button(
+                    item_frame,
+                    text="X",
+                    command=delete_item,
+                    width=2,
+                    height=1,
+                    bg="red",
+                    fg="white"
+                )
+                delete_button.pack(side=tk.LEFT, padx=5)
+
+                item_buttons[y_position] = item_frame
                 y_position += 40
 
             inventory_height = max(100, len(self.player.inventory) * 40 + 100)
@@ -346,7 +370,9 @@ class Game:
         inventory_window = tk.Toplevel(self.canvas.root)
         inventory_window.title("Inventaire")
 
-        x = self.main_window_x - 425
+        inventory_width = 400
+        screen_width = inventory_window.winfo_screenwidth()
+        x = min(max(0, self.main_window_x - inventory_width - 25), screen_width - inventory_width - 25)
         y = self.main_window_y
         inventory_window.geometry(f"400x600+{x}+{y}")
         inventory_window.resizable(False, False)

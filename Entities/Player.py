@@ -50,7 +50,22 @@ class Player:
                 self.defense = self.base_defense + item.value
             else:  # Consommables
                 self.apply_bonus(item.type, item.value)
-
+    def unequip_item(self, slot):
+        if slot in self.equipment:
+            item = self.equipment[slot]
+            if isinstance(item.type, tuple):
+                for t, v in zip(item.type, item.value):
+                    if t == 0:
+                        self.attack -= v
+                    elif t == 1:
+                        self.defense -= v
+            else:
+                if item.type == 0:
+                    self.attack -= item.value
+                elif item.type == 1:
+                    self.defense -= item.value
+            del self.equipment[slot]
+            
     def remove_item_bonus(self, item):
         if isinstance(item.type, tuple):
             for bonus_type, value in zip(item.type, item.value):
