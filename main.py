@@ -85,6 +85,8 @@ class Game:
             else:
                 self.canvas.display_text("Veuillez entrer un nom valide.", 400, 250, font=("Arial", 12), color="red")
 
+        name_entry.bind('<Return>', lambda event: submit_name())
+
         self.canvas.create_button(100, 40, "Valider", 350, 300, submit_name)
 
     def choose_class(self, name):
@@ -93,10 +95,10 @@ class Game:
 
         def set_class(class_name):
             classes = {
-                "Guerrier": Player(name, "Guerrier", 180, 40, 20, 20),
+                "Guerrier": Player(name, "Guerrier", 150, 50, 25, 20),
                 "Mage": Player(name, "Mage", 50000, 5000, 50000, 5000),
-                "Assassin": Player(name, "Assassin", 140, 80, 35, 0),
-                "Paladin": Player(name, "Paladin", 160, 60, 25, 25),
+                "Assassin": Player(name, "Assassin", 120, 70, 40, 8),
+                "Paladin": Player(name, "Paladin", 140, 100, 20, 15),
             }
             self.player = classes[class_name]
             self.show_menu()
@@ -109,7 +111,7 @@ class Game:
     def show_menu(self):
         self.close_aux_windows()
         self.canvas.clear()
-        self.canvas.display_text(f"Menu : {self.player.name}, {self.player.p_class}", 400, 100, font=("Arial", 16), color="blue")  # Recentré
+        self.canvas.display_text(f"Menu : {self.player.name}, {self.player.p_class}", 400, 100, font=("Arial", 16), color="blue") 
         stats = [
             f"HP: {self.player.health}",
             f"Mana: {self.player.mana}",
@@ -138,15 +140,21 @@ class Game:
 
         self.draw_map()
         self.create_movement_buttons()
-
-        self.canvas.create_button(120, 40, "Menu", 340, 500, self.show_menu)
-        self.canvas.create_button(120, 40, "Inventaire", 340, 550, self.show_inventory)
+        
+        self.canvas.create_button(120, 40, "Menu", 250, 530, self.show_menu)
+        self.canvas.create_button(120, 40, "Inventaire", 450, 530, self.show_inventory)
 
     def draw_map(self):
         current_map = self.map_manager.current_map
-        tile_size = 60
-        start_x = 300
-        start_y = 150
+        max_map_size = 5 
+        
+        canvas_size = 300 
+        tile_size = canvas_size // max_map_size
+        
+        margin = (max_map_size - current_map.size) * tile_size // 2
+        start_x = 250 + margin
+        start_y = 70 + margin
+        
 
         for y in range(current_map.size):
             for x in range(current_map.size):
@@ -169,12 +177,15 @@ class Game:
                 )
 
                 if tile.has_monster:
-                    text = "B" if tile.is_exit else "M"
+                    text = "BOSS" if tile.is_exit else "M"
+                    font_size = 10 if tile.is_exit else 12
+
                     self.canvas.canvas.create_text(
                         tile_x + tile_size/2,
                         tile_y + tile_size/2,
                         text=text,
-                        font=("Arial", 14, "bold" if tile.is_exit else "normal")
+                        font=("Arial", font_size, "bold" if tile.is_exit else "normal")
+
                     )
 
     def create_movement_buttons(self):
@@ -184,12 +195,18 @@ class Game:
             if success:
                 if is_exit and self.map_manager.has_monster_at_current_position():
                     if self.zone == "S":
-                        monster = Boss_final
+                        monster = Monster(Boss_final.name, Boss_final.health, 
+                                    Boss_final.attack, Boss_final.defense, 
+                                    Boss_final.rank)
+
                     else:
                         zones = ["D", "C", "B", "A", "S"]
                         next_zone_index = zones.index(self.zone) + 1
                         next_zone = zones[next_zone_index]
-                        monster = random.choice(ranked_monsters[next_zone])
+                        template_monster = random.choice(ranked_monsters[next_zone])
+                        monster = Monster(template_monster.name, template_monster.health, 
+                                    template_monster.attack, template_monster.defense, 
+                                    template_monster.rank)
                     self.start_combat(monster)
                 elif is_exit and not self.map_manager.has_monster_at_current_position():
                     if self.map_manager.advance_to_next_map():
@@ -198,16 +215,19 @@ class Game:
                     else:
                         self.end_game()
                 elif self.map_manager.has_monster_at_current_position():
-                    monsters_of_current_rank = ranked_monsters[self.zone][:]
-                    monster = random.choice(monsters_of_current_rank)
+                    template_monster = random.choice(ranked_monsters[self.zone])
+                    monster = Monster(template_monster.name, template_monster.health, 
+                                template_monster.attack, template_monster.defense, 
+                                template_monster.rank)
                     self.start_combat(monster)
                 else:
                     self.current_zone()
 
-        self.canvas.create_button(80, 40, "↑", 360, 350, lambda: move_player("up"))
-        self.canvas.create_button(80, 40, "↓", 360, 400, lambda: move_player("down"))
-        self.canvas.create_button(80, 40, "←", 260, 375, lambda: move_player("left"))
-        self.canvas.create_button(80, 40, "→", 460, 375, lambda: move_player("right"))
+        self.canvas.create_button(80, 40, "↑", 360, 450, lambda: move_player("up"))
+        self.canvas.create_button(80, 40, "↓", 360, 500, lambda: move_player("down"))
+        self.canvas.create_button(80, 40, "←", 260, 475, lambda: move_player("left"))
+        self.canvas.create_button(80, 40, "→", 460, 475, lambda: move_player("right"))
+    
 
     def start_combat(self, monster):
         self.close_aux_windows()
@@ -253,6 +273,7 @@ class Game:
         self.canvas.clear()
         if victory:
             self.canvas.display_text(f"Vous avez vaincu {monster.name} !", 400, 100, font=("Arial", 16), color="green")
+            self.player.mana = min(self.player.max_mana, self.player.mana + 10)
             loot = random.sample(ranked_items[monster.rank], 2)
             for i, item in enumerate(loot, start=1):
                 self.player.inventory.append(item)
@@ -278,36 +299,28 @@ class Game:
         self.close_aux_windows()
 
         def refresh_inventory():
-            # On détruit les anciens boutons
             for button in item_buttons.values():
                 button.destroy()
             item_buttons.clear()
 
             y_position = 60
             for item in self.player.inventory:
-                # Construction de la description de l'objet
                 if isinstance(item.type, tuple):
-                    # Si l'objet a plusieurs types et valeurs
                     item_types = [f"{['Attaque', 'Défense', 'Soin', 'Mana'][t]} +{v}" for t, v in zip(item.type, item.value)]
                     item_description = f"{item.name} ({', '.join(item_types)})"
                 else:
-                    # Objet simple (un seul type)
                     item_type_name = ["Attaque", "Défense", "Soin", "Mana"][item.type]
                     item_description = f"{item.name} ({item_type_name} +{item.value})"
 
-                # Indication si l'objet est équipé
                 if item == self.player.equipment.get(0):
                     item_description += " (Équipé comme arme)"
                 elif item == self.player.equipment.get(1):
                     item_description += " (Équipé comme armure)"
 
                 def use_item(item=item):
-                    # Selon le type, on équipe ou on consomme
                     if item.type in (0, 1):
-                        # Équiper l'objet (arme ou armure)
                         self.player.equip_item(item)
                     else:
-                        # Consommer l'objet (potion de soin ou de mana)
                         self.player.apply_item_bonus(item)
                         self.player.inventory.remove(item)
 
@@ -315,7 +328,6 @@ class Game:
                     if monster:
                         self.update_combat_status(monster)
 
-                # Création du bouton pour utiliser l'objet
                 item_button = tk.Button(
                     inventory_window,
                     text=item_description,
@@ -331,7 +343,6 @@ class Game:
             inventory_canvas.config(height=inventory_height)
             inventory_window.geometry(f"400x{inventory_height}")
 
-        # Création de la fenêtre d'inventaire
         inventory_window = tk.Toplevel(self.canvas.root)
         inventory_window.title("Inventaire")
 
@@ -386,20 +397,26 @@ class Game:
                     return
 
                 self.player.mana -= current_spell.mana_cost
+                
                 if current_spell.damage > 0 and monster:
                     monster.health -= current_spell.damage
                 if current_spell.heal > 0:
                     self.player.health += current_spell.heal
+                if monster:
+                    damage_to_player = max(0, monster.attack - self.player.defense)
+                    self.player.health -= damage_to_player
+
+
                 if monster and monster.health <= 0:
+                    spells_window.destroy()
                     self.end_combat(victory=True, monster=monster)
+                elif self.player.health <= 0:
+                    spells_window.destroy()
+                    self.end_combat(victory=False, monster=monster)
                 else:
-                    if monster:
-                        damage_to_player = max(0, monster.attack - self.player.defense)
-                        self.player.health -= damage_to_player
-                        if self.player.health <= 0:
-                            self.end_combat(victory=False, monster=monster)
-                        else:
-                            self.update_combat_status(monster)
+                    spells_window.destroy()
+                    self.update_combat_status(monster)
+
 
             spell_button = tk.Button(
                 spells_window,
