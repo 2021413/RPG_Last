@@ -1,8 +1,10 @@
+from Game_ui import LevelSystem
+
 class Player:
     def __init__(self, name, p_class, hp, mana, attack, defense):
         self.name = name
         self.health = hp
-        self.max_health = hp  # Garde la stat max
+        self.max_health = hp
         self.p_class = p_class
         self.mana = mana
         self.max_mana = mana
@@ -15,6 +17,9 @@ class Player:
             0: None,  # Arme
             1: None,  # Armure
         }
+        self.level_system = LevelSystem()
+        self.status_bars = {}
+        
 
     def add_item_to_inventory(self, item):
         self.inventory.append(item)
@@ -92,3 +97,21 @@ class Player:
             self.health -= value
         elif bonus_type == 3:
             self.mana -= value
+
+    def gain_xp(self, amount):
+        leveled_up = self.level_system.add_xp(amount)
+        if leveled_up :
+            self.max_health += 10
+            self.health = self.max_health
+            if self.p_class in ["Mage" , "Paladin"] :
+                self.max_mana += 5
+                self.mana = self.max_mana
+            self.base_attack += 2
+            self.base_defense += 1
+            self.attack = self.base_attack
+            self.defense = self.base_defense
+            for item in self.equipment.values():
+                if item:
+                    self.apply_item_bonus(item)
+            return True
+        return False
