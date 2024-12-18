@@ -6,6 +6,7 @@ from Entities.Monster import *
 from Spells.Spells import *
 from Items.Item import ranked_items
 from map_system import MapManager, GameMap, MapTile
+from Game_ui import StatusBar, XPBar
 
 class Canvas:
     def __init__(self, width, height):
@@ -15,10 +16,11 @@ class Canvas:
         self.canvas.pack()
         self.widgets = []
 
-    def create_button(self, width, height, text, x, y, command):
-        button = tk.Button(self.root, text=text, width=width // 10, height=height // 20, command=command)
+    def create_button(self, width, height, text, x, y, command, **kwargs):
+        button = tk.Button(self.root, text=text, width=width // 10, height=height // 20, command=command, **kwargs)
         button.place(x=x, y=y)
         self.widgets.append(button)
+        return button
 
     def create_input(self, x, y, width=20):
         entry = tk.Entry(self.root, width=width)
@@ -173,6 +175,7 @@ class Game:
         self.zone_bg = ImageTk.PhotoImage(image)
         self.canvas.canvas.create_image(0, 0, anchor="nw", image=self.zone_bg)
 
+        self.canvas.canvas.create_rectangle(200, 20, 600, 80, fill="black", stipple="gray50")
         self.canvas.display_text(f"Zone actuelle : {zone_name}", 400, 50, font=("bold", 20))
 
         self.draw_map()
@@ -273,21 +276,32 @@ class Game:
     def update_combat_status(self, monster):
         self.canvas.clear()
         self.canvas.canvas.create_image(0, 0, anchor="nw", image=self.zone_bg)
-        self.canvas.display_text(f"Combat contre {monster.name}", 250, 25, font=("bold", 20), color="red")
 
-        self.canvas.display_text("Statistiques du Monstre :", 625, 75, font=("bold", 20), color="darkred")
-        self.canvas.display_text(f"Nom : {monster.name}", 600, 105, font=("bold", 20), color="black")
-        self.canvas.display_text(f"HP : {monster.health}", 600, 135, font=("bold", 20), color="black")
-        self.canvas.display_text(f"Attaque : {monster.attack}", 600, 165, font=("bold", 20), color="black")
-        self.canvas.display_text(f"Défense : {monster.defense}", 600, 195, font=("bold", 20), color="black")
+        self.canvas.canvas.create_rectangle(50, 70, 750, 200, fill="black", stipple="gray50")
+        self.canvas.display_text(f"Combat contre {monster.name}", 400, 30, font=("Arial", 24, "bold"), color="red")
+        self.canvas.display_text("MONSTRE", 400, 90, font=("Arial", 20, "bold"), color="darkred")
+        self.canvas.display_text(monster.name, 400, 120, font=("Arial", 16, "bold"), color="white")
+        
+        monster_health_bar = StatusBar(self.canvas.canvas, 200, 150, 400, 25, monster.max_health, monster.health, "red")
+        
+        self.canvas.display_text(f"ATK: {monster.attack}", 300, 185, font=("Arial", 12), color="white")
+        self.canvas.display_text(f"DEF: {monster.defense}", 500, 185, font=("Arial", 12), color="white")
 
-        self.canvas.display_text("Statistiques du Joueur :", 175, 290, font=("bold", 20), color="blue")
-        self.canvas.display_text(f"Nom : {self.player.name}", 125, 330, font=("bold", 20), color="black")
-        self.canvas.display_text(f"HP : {self.player.health}", 125, 360, font=("bold", 20), color="black")
-        self.canvas.display_text(f"Mana : {self.player.mana}", 125, 390, font=("bold", 20), color="black")
-        self.canvas.display_text(f"Attaque : {self.player.attack}", 125, 420, font=("bold", 20), color="black")
-        self.canvas.display_text(f"Défense : {self.player.defense}", 125, 450, font=("bold", 20), color="black")
+        self.canvas.canvas.create_rectangle(50, 220, 750, 450, fill="black", stipple="gray50")
+        self.canvas.display_text(f"{self.player.name} - {self.player.p_class}", 400, 240, font=("Arial", 20, "bold"), color="lightblue")
+        
+        player_health_bar = StatusBar(self.canvas.canvas, 200, 280, 400, 25, self.player.max_health, self.player.health, "lightgreen")
+        
+        if self.player.p_class in ["Mage", "Paladin"]:
+            player_mana_bar = StatusBar(self.canvas.canvas, 200, 320, 400, 25, self.player.max_mana, self.player.mana, "blue")
+        
+        xp_bar = XPBar(self.canvas.canvas, 200, 360, 400, 25, self.player.level_system)
+        
+        self.canvas.display_text(f"ATK: {self.player.attack}", 300, 400, font=("Arial", 12), color="white")
+        self.canvas.display_text(f"DEF: {self.player.defense}", 500, 400, font=("Arial", 12), color="white")
 
+        self.canvas.canvas.create_rectangle(50, 470, 750, 550, fill="black", stipple="gray50")
+        
         def attack():
             damage_to_monster = max(0, self.player.attack - monster.defense)
             monster.health -= damage_to_monster
@@ -302,22 +316,46 @@ class Game:
             else:
                 self.update_combat_status(monster)
 
-        self.canvas.create_button(120, 40, "Attaquer", 75, 525, attack)
-        self.canvas.create_button(120, 40, "Sort", 250, 525, lambda: self.show_spells(monster))
-        self.canvas.create_button(120, 40, "Inventaire", 425, 525, lambda :self.show_inventory(monster))
-        self.canvas.create_button(120, 40, "Fuir", 600, 525, self.current_zone)
+        attack_button = tk.Button(self.canvas.root, text="Attaquer", command=attack, width=10, height=1)
+        attack_button.place(x=100, y=485)
+        
+        spells_button = tk.Button(self.canvas.root, text="Sort", command=lambda: self.show_spells(monster), width=10, height=1)
+        spells_button.place(x=275, y=485)
+        
+        inventory_button = tk.Button(self.canvas.root, text="Inventaire", command=lambda: self.show_inventory(monster), width=10, height=1)
+        inventory_button.place(x=450, y=485)
+        
+        flee_button = tk.Button(self.canvas.root, text="Fuir", command=self.current_zone, width=10, height=1)
+        flee_button.place(x=625, y=485)
+        
+        self.canvas.widgets.extend([attack_button, spells_button, inventory_button, flee_button])
 
     def end_combat(self, victory, monster):
         self.close_aux_windows()
         self.canvas.clear()
 
         if victory:
+            xp_gains = {
+                "S": 500,
+                "A": 250,
+                "B": 150,
+                "C": 100,
+                "D": 50
+            }
+            xp_gained = xp_gains.get(monster.rank, 50)
+            leveled_up = self.player.gain_xp(xp_gained)
             image = Image.open("Assets/chest.png")
             resized_image = image.resize((800, 600), Image.Resampling.LANCZOS)
             self.chest_bg = ImageTk.PhotoImage(resized_image)
             self.canvas.canvas.create_image(0, 0, anchor="nw", image=self.chest_bg)
 
-            self.canvas.display_text(f"Vous avez vaincu {monster.name} et un coffre apparait !", 400, 200, font=("bold", 20), color="green")
+            self.canvas.canvas.create_rectangle(100, 130, 700, 170, fill="black", stipple="gray50")
+            self.canvas.display_text(f"Vous avez vaincu {monster.name} et un coffre apparait !", 400, 150, font=("Arial Black", 12, "bold"), color="lime")
+            self.canvas.canvas.create_rectangle(300, 180, 500, 200, fill="black", stipple="gray50")
+            self.canvas.display_text(f"XP gagnée : {xp_gained}", 400, 190, font=("Arial Black", 16, "bold"),color = "yellow")
+            if leveled_up:
+                self.canvas.canvas.create_rectangle(150, 210, 650, 250, fill="black", stipple="gray50")
+                self.canvas.display_text(f"Niveau supérieur ! Vous êtes maintenant niveau {self.player.level_system.level}", 400, 230, font=("Arial Black", 12, "bold"), color="gold")
             self.player.mana = min(self.player.max_mana, self.player.mana + 10)
 
             loot = []
@@ -337,24 +375,27 @@ class Game:
                     loot.append(item)
                     i += 1
 
+            self.canvas.canvas.create_rectangle(250, 250, 550, 350, fill="black", stipple="gray50")
             for idx, item in enumerate(loot, start=1):
                 self.player.inventory.append(item)
-                self.canvas.display_text(f"Loot {idx}: {item.name}", 400, 215 + idx * 30)
+                self.canvas.display_text(f"Loot {idx}: {item.name}", 400, 250 + idx * 30, font=("Arial", 12, "bold"), color="white")
             self.map_manager.mark_monster_defeated()
 
             current_tile = self.map_manager.current_map.get_current_tile()
 
             if current_tile.is_exit:
-                self.canvas.display_text("Vous pouvez maintenant passer à la zone suivante !", 400, 315, font=("bold", 20), color="green")
+                self.canvas.canvas.create_rectangle(100, 395, 700, 435, fill="black", stipple="gray50")
+                self.canvas.display_text("Vous pouvez maintenant passer à la zone suivante !", 400, 415, font=("Arial Black", 16, "bold"), color="lime")
                 if self.map_manager.advance_to_next_map():
                     self.zone = self.map_manager.get_current_difficulty()
                     self.canvas.create_button(120, 40, "Zone suivante", 340, 520, self.current_zone)
                 else:
+                    self.canvas.canvas.create_rectangle(150, 30, 650, 70, fill="black", stipple="gray50")
                     self.canvas.create_button(120, 40, "Terminer", 340, 520, self.end_game)
             else:
                 self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
         else:
-            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 400, 50, font=("bold", 20), color="red")
+            self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 400, 50, font=("Arial Black", 20,"bold"), color="red")
             self.canvas.create_button(120, 40, "Quitter", 360, 525, self.canvas.root.destroy)
 
     def show_inventory(self, monster=None):

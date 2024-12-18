@@ -1,6 +1,7 @@
 class Monster:
     def __init__(self, name, hp, attack, defense, rank):
         self.name = name
+        self.max_health = hp
         self.health = hp
         self.attack = attack
         self.defense = defense
