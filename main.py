@@ -479,9 +479,9 @@ class Game:
                             self.player.status_bars["mana"].update(self.player.mana)
                         print("update")
                         self.update_combat_status(monster)
-                        return self.show_inventory(monster)
-
-                    self.show_inventory()
+                        self.show_inventory(monster)
+                    else:
+                        self.show_inventory()
 
                 item_button = tk.Button(
                     inventory_window,
@@ -512,7 +512,10 @@ class Game:
 
         def delete_item(item):
             self.player.inventory.remove(item)
-            self.show_inventory(monster=None)
+            if monster:
+                self.show_inventory(monster)
+            else:
+                self.show_inventory()
 
         inventory_window = tk.Toplevel(self.canvas.root)
         inventory_window.title("Inventaire")
