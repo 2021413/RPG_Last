@@ -30,11 +30,16 @@ class Player:
         item_type = item.type
         if item_type not in self.equipment:
             raise ValueError("Ce type d'objet ne peut pas être équipé.")
-        
+
         currently_equipped = self.equipment[item_type]
         if currently_equipped is not None:
             self.unequip_item(currently_equipped)
-        
+
+        if item_type == 0:
+            self.attack = self.base_attack
+        else:
+            self.defense = self.base_defense
+
         self.equipment[item_type] = item
         self.apply_item_bonus(item)
 
@@ -45,16 +50,16 @@ class Player:
             self.equipment[item_type] = None
 
     def apply_item_bonus(self, item):
-        if isinstance(item.type, tuple):
+        if isinstance(item.type, tuple):  # Plusieurs bonus
             for bonus_type, value in zip(item.type, item.value):
                 self.apply_bonus(bonus_type, value)
-        else:
-            if item.type == 0:  # Arme
-                self.attack = self.base_attack + item.value
-            elif item.type == 1:  # Armure
-                self.defense = self.base_defense + item.value
-            else:  # Consommables
-                self.apply_bonus(item.type, item.value)
+        else:  # Bonus unique
+            self.apply_bonus(item.type, item.value)
+
+        if item.type in [2, 3]:  # 2 = Santé, 3 = Mana
+            if item in self.inventory:
+                self.inventory.remove(item)
+
     def unequip_item(self, slot):
         if slot in self.equipment:
             item = self.equipment[slot]
