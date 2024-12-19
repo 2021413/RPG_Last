@@ -477,7 +477,6 @@ class Game:
                             self.player.status_bars["health"].update(self.player.health)
                         if "mana" in self.player.status_bars:
                             self.player.status_bars["mana"].update(self.player.mana)
-                        print("update")
                         self.update_combat_status(monster)
                         self.show_inventory(monster)
                     else:
