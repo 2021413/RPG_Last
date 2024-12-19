@@ -136,13 +136,13 @@ class Game:
             "Paladin": ImageTk.PhotoImage(Image.open("Assets/paladin.png").resize((tile_size, tile_size))),
         }
 
-        # Réduire la taille des icônes des monstres
-        monster_icon_size = int(tile_size * 0.8)  # Réduit à 80% de la taille des tuiles
+
+        monster_icon_size = int(tile_size * 0.7)
         self.monster_icon = ImageTk.PhotoImage(
             Image.open("Assets/monster.png").resize((monster_icon_size, monster_icon_size))
         )
 
-        boss_icon_size = int(tile_size * 0.9)  # Réduit à 90% de la taille des tuiles
+        boss_icon_size = int(tile_size * 0.8)
         self.boss_icon = ImageTk.PhotoImage(
             Image.open("Assets/boss.png").resize((boss_icon_size, boss_icon_size))
         )
@@ -222,8 +222,7 @@ class Game:
         start_x = 250 + margin
         start_y = 70 + margin
 
-        # Récupérer l'image du joueur en fonction de sa classe
-        player_image = self.player_icons[self.player.p_class]  # Utilise la classe du joueur
+        player_image = self.player_icons[self.player.p_class]
 
         for y in range(current_map.size):
             for x in range(current_map.size):
@@ -231,21 +230,18 @@ class Game:
                 tile_x = start_x + (x * tile_size)
                 tile_y = start_y + (y * tile_size)
 
-                # Définir la couleur par défaut
                 color = "lightgray"
                 if tile.visited:
                     color = "white"
                 if tile.is_exit:
                     color = "white"
 
-                # Dessiner la tuile de base
                 self.canvas.canvas.create_rectangle(
                     tile_x, tile_y,
                     tile_x + tile_size, tile_y + tile_size,
                     fill=color, outline="black"
                 )
 
-                # Afficher le personnage
                 if (x, y) == current_map.current_position:
                     self.canvas.canvas.create_image(
                         tile_x + tile_size / 2,
@@ -253,7 +249,6 @@ class Game:
                         image=player_image
                     )
 
-                # Afficher les monstres ou les boss
                 elif tile.has_monster:
                     icon = self.boss_icon if tile.is_exit else self.monster_icon
                     self.canvas.canvas.create_image(
@@ -498,7 +493,6 @@ class Game:
                 item_button.place(x=25, y=y_position)
                 item_buttons[y_position] = item_button
 
-                # Ajouter un bouton rouge pour supprimer l'item (si non équipé)
                 if item != self.player.equipment.get(0) and item != self.player.equipment.get(1):
                     delete_button = tk.Button(
                         inventory_window,
