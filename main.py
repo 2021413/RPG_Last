@@ -234,7 +234,7 @@ class Game:
                 if tile.visited:
                     color = "white"
                 if tile.is_exit:
-                    color = "white"
+                    color = "red"
 
                 self.canvas.canvas.create_rectangle(
                     tile_x, tile_y,
