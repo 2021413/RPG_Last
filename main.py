@@ -554,7 +554,7 @@ class Game:
             self.current_zone()
         else:
             self.canvas.clear()
-            self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("bold", 20), color="gold")
+            self.canvas.display_text("Vous avez atteint la dernière zone !", 400, 300, font=("Arial Black", 20, "bold"), color="gold")
             self.canvas.create_button(120, 40, "Retour au menu", 340, 400, self.show_menu)
 
     def end_game(self):
