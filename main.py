@@ -198,6 +198,7 @@ class Game:
         self.zone_bg = ImageTk.PhotoImage(image)
         self.canvas.canvas.create_image(0, 0, anchor="nw", image=self.zone_bg)
 
+
         self.canvas.display_text(f"Zone actuelle : {zone_name}", 400, 50, font=("Arial", 20))
 
         self.draw_map()
@@ -351,7 +352,7 @@ class Game:
         self.close_aux_windows()
         self.canvas.clear()
 
-        if victory:
+        if victory and not monster.rank == "S+":
             xp_gains = {
                 "S": 500,
                 "A": 250,
@@ -407,6 +408,9 @@ class Game:
                     self.canvas.create_button(120, 40, "Terminer", 340, 520, self.end_game)
             else:
                 self.canvas.create_button(120, 40, "Continuer", 340, 520, self.current_zone)
+        elif victory and monster.rank == "S+":
+            self.canvas.display_text(f"Vous avez fini le jeux brave avanturier !", 400, 50, font=("Arial Black", 20,"bold"), color="green")
+            self.canvas.create_button(120, 40, "Quitter", 360, 525, self.canvas.root.destroy)
         else:
             self.canvas.display_text(f"Vous avez été vaincu par {monster.name}.", 400, 50, color="red")
             self.canvas.create_button(120, 40, "Quitter", 360, 525, self.canvas.root.destroy)
@@ -508,7 +512,7 @@ class Game:
     def show_spells(self, monster=None):
         self.close_aux_windows()
         if self.player.p_class not in spells:
-            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 350, 480, font=("Arial", 14), color="red")
+            self.canvas.display_text("Votre classe ne peut pas utiliser de sorts.", 400, 580, font=("Arial", 14), color="red")
             return
 
         spells_window = tk.Toplevel(self.canvas.root)
@@ -537,7 +541,7 @@ class Game:
 
             def cast_spell(current_spell=spell):
                 if self.player.mana < current_spell.mana_cost:
-                    self.canvas.display_text("Pas assez de mana !", 350, 480, font=("Arial", 14), color="red")
+                    self.canvas.display_text("Pas assez de mana !", 400, 580, font=("Arial", 14), color="red")
                     self.close_aux_windows()
                     return
 
