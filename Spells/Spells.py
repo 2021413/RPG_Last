@@ -33,4 +33,3 @@ spells = {
         Spell("Colère Divine", 35, damage=45),
     ],
 }
-
