@@ -113,7 +113,7 @@ class Game:
         def set_class(class_name):
             classes = {
                 "Guerrier": Player(name, "Guerrier", 150, 0, 25, 20),
-                "Mage": Player(name, "Mage", 50000, 5000, 50000, 5000),
+                "Mage": Player(name, "Mage", 80, 200, 35, 10),
                 "Assassin": Player(name, "Assassin", 120, 0, 40, 8),
                 "Paladin": Player(name, "Paladin", 140, 100, 20, 15),
             }
